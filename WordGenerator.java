@@ -35,7 +35,7 @@ public class WordGenerator {
     
     //basic WordGenerator with no subpatterns
     public WordGenerator(String mainPattern) {
-        this( mainPattern, "", "", "");
+        this(mainPattern, "", "", "");
     }
 
     /* User Methods */
