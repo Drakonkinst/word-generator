@@ -71,6 +71,10 @@ public class WordGenerator {
         for(int i = 0; exists(fragments, i ,0); i++) {
             String fragStr = "";
 
+            if(fragments[i][0].isEmpty()) {
+                continue;
+            }
+
             switch(fragments[i][0].charAt(0)) {
                 case '(':
                     //same as '[' but 50% chance to skip entirely
