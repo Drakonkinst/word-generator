@@ -61,6 +61,10 @@ public class WordGenerator {
         return result;
     }
 
+    public String generateOne() {
+        return render(mainPattern);
+    }
+
     /* Calculations */
 
     //generates a single word from the pattern
