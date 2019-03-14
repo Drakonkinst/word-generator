@@ -14,7 +14,7 @@ public class WordGenerator {
 
     /* Constructors */
     //WordGenerator with 6 subpatterns
-    public WordGenerator(String patternC, String patternV, String patternN, String patternA, String patternB, String patternD, String mainPattern) {
+    public WordGenerator(String mainPattern, String patternC, String patternV, String patternN, String patternA, String patternB, String patternD) {
         this.mainPattern = mainPattern;
         this.patterns = new String[26];
 
@@ -29,13 +29,13 @@ public class WordGenerator {
     }
 
     //WordGenerator with Consonant, Verb, and Noun subpatterns
-    public WordGenerator(String patternC, String patternV, String patternN, String mainPattern) {
-        this(patternC, patternV, patternN, "", "", "", mainPattern);
+    public WordGenerator(String mainPattern, String patternC, String patternV, String patternN) {
+        this(mainPattern, patternC, patternV, patternN, "", "", "");
     }
     
     //basic WordGenerator with no subpatterns
     public WordGenerator(String mainPattern) {
-        this("", "", "", mainPattern);
+        this( mainPattern, "", "", "");
     }
 
     /* User Methods */
