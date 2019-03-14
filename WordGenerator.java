@@ -30,12 +30,12 @@ public class WordGenerator {
 
     //WordGenerator with Consonant, Verb, and Noun subpatterns
     public WordGenerator(String mainPattern, String patternC, String patternV, String patternN) {
-        this(mainPattern, patternC, patternV, patternN, "", "", "");
+        this(mainPattern, patternC, patternV, patternN, null, null, null);
     }
     
     //basic WordGenerator with no subpatterns
     public WordGenerator(String mainPattern) {
-        this(mainPattern, "", "", "");
+        this(mainPattern, null, null, null);
     }
 
     /* User Methods */
@@ -240,7 +240,7 @@ public class WordGenerator {
                         }
 
                         fragments[fragIndex][0] += next;
-						i++;
+                        i++;
 
                     } while(level >= 0 && i < patternLength);
                     i--;
