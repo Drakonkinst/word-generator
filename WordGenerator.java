@@ -9,16 +9,16 @@ import java.util.Random;
 public class WordGenerator {
     
     /* Private Variables */
-    private String mainPattern;     //the main blueprint
-    private String[] patterns;      //subpatterns that hold shortcuts to smaller patterns
+    private String mainPattern;     // the main blueprint
+    private String[] patterns;      // subpatterns that hold shortcuts to smaller patterns
 
     /* Constructors */
-    //WordGenerator with 6 subpatterns
+    // WordGenerator with 6 subpatterns
     public WordGenerator(String mainPattern, String patternC, String patternV, String patternN, String patternA, String patternB, String patternD) {
         this.mainPattern = mainPattern;
         this.patterns = new String[26];
 
-        //insert patterns by letter
+        // insert patterns by letter
         patterns[2] = patternC;
         patterns[21] = patternV;
         patterns[13] = patternN;
@@ -28,20 +28,20 @@ public class WordGenerator {
         patterns[3] = patternD;
     }
 
-    //WordGenerator with Consonant, Verb, and Noun subpatterns
+    // WordGenerator with Consonant, Verb, and Noun subpatterns
     public WordGenerator(String mainPattern, String patternC, String patternV, String patternN) {
         this(mainPattern, patternC, patternV, patternN, null, null, null);
     }
     
-    //basic WordGenerator with no subpatterns
+    // basic WordGenerator with no subpatterns
     public WordGenerator(String mainPattern) {
         this(mainPattern, null, null, null);
     }
 
     /* User Methods */
 
-    //assigns a pattern to a specific shortcut (from 'A' to 'Z')
-    //returns whether it was successful or not
+    // assigns a pattern to a specific shortcut (from 'A' to 'Z')
+    // returns whether it was successful or not
     public boolean set(char shortcut, String pattern) {
         if(isShortcut(shortcut)) {
             patterns[shortcut - 65] = pattern;
@@ -51,7 +51,7 @@ public class WordGenerator {
         return false;
     }
 
-    //generates a specified number of words from the generator
+    // generates a specified number of words from the generator
     public String[] generate(int amount) {
         String[] result = new String[amount];
         for(int i = 0; i < amount; i++) {
@@ -67,7 +67,7 @@ public class WordGenerator {
 
     /* Calculations */
 
-    //generates a single word from the pattern
+    // generates a single word from the pattern
     private String render(String pattern) {
         String[][] fragments = fragments(choose(pattern));
         String finalStr = "";
@@ -81,7 +81,7 @@ public class WordGenerator {
 
             switch(fragments[i][0].charAt(0)) {
                 case '(':
-                    //same as '[' but 50% chance to skip entirely
+                    // same as '[' but 50% chance to skip entirely
                     Random randomizer = new Random();
                     if(randomizer.nextBoolean()) {      
 						int fragLength = fragments[i][0].length();
@@ -89,7 +89,7 @@ public class WordGenerator {
                     }
 					break;
                 case '[':
-                    //recursively renders parts of the word
+                    // recursively renders parts of the word
                     int fragLength = fragments[i][0].length();
                     fragStr = render(fragments[i][0].substring(1, fragLength - 1));
                     break;
@@ -99,7 +99,7 @@ public class WordGenerator {
 
             for(int filterIndex = 0; exists(fragments, i, 1 + filterIndex); filterIndex++) {
                 if(fragStr.equals(fragments[i][1 + filterIndex])) {
-                    //abort rendering
+                    // abort rendering
                     return "RENDERING_ERROR";
                 }
             }
@@ -107,12 +107,12 @@ public class WordGenerator {
 			finalStr += fragStr;
         }
 
-        //uncover dummy brackets
+        // uncover dummy brackets
         return finalStr.replaceAll("12", "[(");
         
     }
 
-    //parses a list of slash-delimited options
+    // parses a list of slash-delimited options
     private String choose(String str) {
         int strLength = str.length();
         List<String> options = new ArrayList<String>();
@@ -123,9 +123,9 @@ public class WordGenerator {
             String weightStr = "";
 
             for(int level = 0; !(i == strLength || (level == 0 && str.charAt(i) == '/')); i++) {
-                //process option's characters
+                // process option's characters
                 if(str.charAt(i) == '"') {
-                    //escaped characters
+                    // escaped characters
                     optionStr += str.charAt(i);
                     i++;
                     while(i < strLength) {
@@ -136,7 +136,7 @@ public class WordGenerator {
                         i++;
                     }
                 } else if(str.charAt(i) == '*' && level == 0) {
-                    //weight specification
+                    // weight specification
                     i++;
                     while(Character.isDigit(str.charAt(i)) && i < strLength) {
                         weightStr += str.charAt(i);
@@ -155,7 +155,7 @@ public class WordGenerator {
             }
             options.add(optionStr);
 
-            //check weight range - capped at 128
+            // check weight range - capped at 128
             if(weightStr.isEmpty()) {
                 weightStr = "1";
             }
@@ -167,7 +167,7 @@ public class WordGenerator {
                 weight = 128;
             }
 
-            //insert number of references into list according to weight
+            // insert number of references into list according to weight
             String option = options.get(options.size() - 1);
             for(int j = 0; j < weight; j++) {
                 target.add(option);
@@ -178,7 +178,7 @@ public class WordGenerator {
         return target.get(randomizer.nextInt(target.size()));
     }
     
-    //divides a pattern into top-level fragments, returning the substrings as an array.
+    // divides a pattern into top-level fragments, returning the substrings as an array.
     private String[][] fragments(String pattern) {
         char current;
         int fragIndex = 0;
@@ -189,7 +189,7 @@ public class WordGenerator {
         for(int i = 0; i < patternLength; i++) {
             current = pattern.charAt(i);
             if(isShortcut(current)) {
-                //shortcut letter
+                // shortcut letter
                 int lastIndex = lastIndex();
                 fragments[fragIndex][0] = "";
 
@@ -202,11 +202,11 @@ public class WordGenerator {
                 fragIndex++;
                 filterIndex = 0;
             } else if(current == '^') {
-                //recursively filters an open fragment
+                // recursively filters an open fragment
                 i++;
                 int length = 0;
                 char next = pattern.charAt(i);
-                boolean esc = false;            //note: quote escaping works inside filters
+                boolean esc = false;            // note: quote escaping works inside filters
 
                 while(esc || (!isSpecial(next) && (i + length < patternLength))) {
                     if(next == '"') {
@@ -229,7 +229,7 @@ public class WordGenerator {
 				fragments[fragIndex][0] = "";
 				
                 if(current == '[' || current == '(') {
-                    //brackets
+                    // brackets
                     int level = -1;
                     do {
                         char next = pattern.charAt(i);
@@ -247,23 +247,23 @@ public class WordGenerator {
                     fragIndex++;
                     filterIndex = 0;
                 } else {
-                    //read characters
+                    // read characters
                     char next;
                     while(i < patternLength && !isSpecial(pattern.charAt(i))) {
                         next = pattern.charAt(i);
                         if(next == '"') {
-                            //escaping time!
+                            // escaping time!
                             i++;
                             if(pattern.charAt(i) == '"') {
-                                //insert a single " in the fragment
+                                // insert a single " in the fragment
                                 fragments[fragIndex][0] += '"';
                             }
                             while(pattern.charAt(i) != '"' && i < patternLength) {
-                                //read escaped characters
+                                // read escaped characters
                                 char escNext = pattern.charAt(i);
                                 char addFrag = escNext;
 
-                                //dummy characters for fragment-initial brackets to get around their detection in render()
+                                // dummy characters for fragment-initial brackets to get around their detection in render()
                                 if(escNext == '[') {
                                     addFrag = '1';
                                 } else if(escNext == '(') {
@@ -274,7 +274,7 @@ public class WordGenerator {
                                 i++;
                             }
                         } else if(next != ' ') {
-                            //note: spaces do not interrupt the fragment
+                            // note: spaces do not interrupt the fragment
                             fragments[fragIndex][0] += next;
                         }
                         
@@ -301,12 +301,12 @@ public class WordGenerator {
         return c == '[' || c == '(' || c == '^' || isShortcut(c);
     }
     
-    //returns if index exists in 2D array and is not null
+    // returns if index exists in 2D array and is not null
 	private boolean exists(String[][] array, int row, int col) {
 		return row < array.length && col < array[0].length && array[row][col] != null;
 	}
 
-    //gets last filled index for optimized looping
+    // gets last filled index for optimized looping
     private int lastIndex() {
         int lastIndex = 0;
         for(int i = 0; i <= 25; i++) {
