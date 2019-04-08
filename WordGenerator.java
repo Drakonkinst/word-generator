@@ -9,6 +9,8 @@ import java.util.Random;
 public class WordGenerator {
     
     /* Private Variables */
+    private static Random rand = new Random();
+
     private String mainPattern;     // the main blueprint
     private String[] patterns;      // subpatterns that hold shortcuts to smaller patterns
 
@@ -82,8 +84,7 @@ public class WordGenerator {
             switch(fragments[i][0].charAt(0)) {
                 case '(':
                     // same as '[' but 50% chance to skip entirely
-                    Random randomizer = new Random();
-                    if(randomizer.nextBoolean()) {      
+                    if(rand.nextBoolean()) {      
 						int fragLength = fragments[i][0].length();
 						fragStr = render(fragments[i][0].substring(1, fragLength - 1));
                     }
@@ -174,8 +175,7 @@ public class WordGenerator {
             }
         }
 
-        Random randomizer = new Random();
-        return target.get(randomizer.nextInt(target.size()));
+        return target.get(rand.nextInt(target.size()));
     }
     
     // divides a pattern into top-level fragments, returning the substrings as an array.
