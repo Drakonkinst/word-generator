@@ -7,7 +7,7 @@ import java.util.Random;
  * Based on Awkwords 1.2 by Petr Mejzlik (http://akana.conlang.org/tools/awkwords/)
  */
 public class WordGenerator {
-    
+
     /* Private Variables */
     private static Random rand = new Random();
 
@@ -34,7 +34,7 @@ public class WordGenerator {
     public WordGenerator(String mainPattern, String patternC, String patternV, String patternN) {
         this(mainPattern, patternC, patternV, patternN, null, null, null);
     }
-    
+
     // basic WordGenerator with no subpatterns
     public WordGenerator(String mainPattern) {
         this(mainPattern, null, null, null);
@@ -84,11 +84,11 @@ public class WordGenerator {
             switch(fragments[i][0].charAt(0)) {
                 case '(':
                     // same as '[' but 50% chance to skip entirely
-                    if(rand.nextBoolean()) {      
-						int fragLength = fragments[i][0].length();
-						fragStr = render(fragments[i][0].substring(1, fragLength - 1));
+                    if(rand.nextBoolean()) {
+                        int fragLength = fragments[i][0].length();
+                        fragStr = render(fragments[i][0].substring(1, fragLength - 1));
                     }
-					break;
+                    break;
                 case '[':
                     // recursively renders parts of the word
                     int fragLength = fragments[i][0].length();
@@ -104,13 +104,13 @@ public class WordGenerator {
                     return "RENDERING_ERROR";
                 }
             }
-			
-			finalStr += fragStr;
+
+            finalStr += fragStr;
         }
 
         // uncover dummy brackets
         return finalStr.replaceAll("12", "[(");
-        
+
     }
 
     // parses a list of slash-delimited options
@@ -120,17 +120,17 @@ public class WordGenerator {
         List<String> target = new ArrayList<String>();
 
         for(int i = 0; i < strLength; i++) {
-            String optionStr = "";
-            String weightStr = "";
+            StringBuilder optionStr = new StringBuilder();
+            StringBuilder weightStr = new StringBuilder();
 
             for(int level = 0; !(i == strLength || (level == 0 && str.charAt(i) == '/')); i++) {
                 // process option's characters
                 if(str.charAt(i) == '"') {
                     // escaped characters
-                    optionStr += str.charAt(i);
+                    optionStr.append(str.charAt(i));
                     i++;
                     while(i < strLength) {
-                        optionStr += str.charAt(i);
+                        optionStr.append(str.charAt(i));
                         if(str.charAt(i) == '"') {
                             break;
                         }
@@ -140,13 +140,13 @@ public class WordGenerator {
                     // weight specification
                     i++;
                     while(Character.isDigit(str.charAt(i)) && i < strLength) {
-                        weightStr += str.charAt(i);
+                        weightStr.append(str.charAt(i));
                         i++;
                     }
                     i--;
                 } else {
                     char current = str.charAt(i);
-                    optionStr += current;
+                    optionStr.append(current);
                     if(current == '[' || current == '(') {
                         level++;
                     } else if(current == ']' || current == ')') {
@@ -154,13 +154,13 @@ public class WordGenerator {
                     }
                 }
             }
-            options.add(optionStr);
+            options.add(optionStr.toString());
 
             // check weight range - capped at 128
-            if(weightStr.isEmpty()) {
-                weightStr = "1";
+            if(weightStr.length() == 0) {
+                weightStr = new StringBuilder("1");
             }
-            int weight = Integer.parseInt(weightStr);
+            int weight = Integer.parseInt(weightStr.toString());
             if(weight < 1) {
                 weight = 1;
             }
@@ -177,14 +177,14 @@ public class WordGenerator {
 
         return target.get(rand.nextInt(target.size()));
     }
-    
+
     // divides a pattern into top-level fragments, returning the substrings as an array.
     private String[][] fragments(String pattern) {
         char current;
         int fragIndex = 0;
         int filterIndex = 0;
         int patternLength = pattern.length();
-		String[][] fragments = new String[patternLength][2];
+        String[][] fragments = new String[patternLength][2];
 
         for(int i = 0; i < patternLength; i++) {
             current = pattern.charAt(i);
@@ -226,8 +226,8 @@ public class WordGenerator {
                     }
                 }
             } else {
-				fragments[fragIndex][0] = "";
-				
+                fragments[fragIndex][0] = "";
+
                 if(current == '[' || current == '(') {
                     // brackets
                     int level = -1;
@@ -277,7 +277,7 @@ public class WordGenerator {
                             // note: spaces do not interrupt the fragment
                             fragments[fragIndex][0] += next;
                         }
-                        
+
                         i++;
                     }
                     i--;
@@ -300,11 +300,11 @@ public class WordGenerator {
     private boolean isSpecial(char c) {
         return c == '[' || c == '(' || c == '^' || isShortcut(c);
     }
-    
+
     // returns if index exists in 2D array and is not null
-	private boolean exists(String[][] array, int row, int col) {
-		return row < array.length && col < array[0].length && array[row][col] != null;
-	}
+    private boolean exists(String[][] array, int row, int col) {
+        return row < array.length && col < array[0].length && array[row][col] != null;
+    }
 
     // gets last filled index for optimized looping
     private int lastIndex() {
