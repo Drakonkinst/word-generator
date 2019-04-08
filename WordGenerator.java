@@ -208,7 +208,7 @@ public class WordGenerator {
                 char next = pattern.charAt(i);
                 boolean esc = false;            // note: quote escaping works inside filters
 
-                while(esc || (!isSpecial(next) && (i + length < patternLength))) {
+                while(esc || (notSpecial(next) && (i + length < patternLength))) {
                     if(next == '"') {
                         esc = !esc;
                     }
@@ -249,7 +249,7 @@ public class WordGenerator {
                 } else {
                     // read characters
                     char next;
-                    while(i < patternLength && !isSpecial(pattern.charAt(i))) {
+                    while(i < patternLength && notSpecial(pattern.charAt(i))) {
                         next = pattern.charAt(i);
                         if(next == '"') {
                             // escaping time!
@@ -297,8 +297,8 @@ public class WordGenerator {
         return c >= 'A' && c <= 'Z';
     }
 
-    private boolean isSpecial(char c) {
-        return c == '[' || c == '(' || c == '^' || isShortcut(c);
+    private boolean notSpecial(char c) {
+        return c != '[' && c != '(' && c != '^' && !isShortcut(c);
     }
 
     // returns if index exists in 2D array and is not null
