@@ -72,7 +72,7 @@ public class WordGenerator {
     // generates a single word from the pattern
     private String render(String pattern) {
         String[][] fragments = fragments(choose(pattern));
-        String finalStr = "";
+        StringBuilder finalStr = new StringBuilder();
 
         for(int i = 0; exists(fragments, i ,0); i++) {
             String fragStr = "";
@@ -105,12 +105,11 @@ public class WordGenerator {
                 }
             }
 
-            finalStr += fragStr;
+            finalStr.append(fragStr);
         }
 
         // uncover dummy brackets
-        return finalStr.replaceAll("12", "[(");
-
+        return finalStr.toString().replaceAll("12", "[(");
     }
 
     // parses a list of slash-delimited options
