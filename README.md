@@ -3,7 +3,7 @@
 *The current version of this project is coded in Java 17.
 If you use this in your projects, please give me credit by linking this page!*
 
-A word generator that generates random words from a given pattern. It can be used to generate phonetic words for conlangs, convoluted passwords, or original nicknames. This design is heavily based on [Awkwords](http://akana.conlang.org/tools/awkwords/) by Petr Mejzli, but has some notable differences and is optimized for performance.
+A word generator that generates random words from a given pattern. It can be used to generate phonetic words for conlangs, convoluted passwords, or original nicknames. This design is heavily based on [Awkwords](http://akana.conlang.org/tools/awkwords/) by Petr Mejzlik, but has some notable differences and is optimized for performance.
 
 ## Concepts
 
@@ -42,7 +42,7 @@ It is good to note that storing these tokens uses far more memory than storing s
 
 I have attempted to make this as optimized as possible; for example, my program caches TokenLiterals to make sure that two tokens with the exact same string are not created. There are more modifications I have done on my own version of this generator to optimize it further, but I replaced them with more native Java code to decouple them from my project for this repository. If runtime performance is also important for you, I would recommend the following:
 
-- Use FastUtil or an equivalent library for efficient primitive lists and maps. This avoids the runtime overhead of Java's wrapper classes and autoboxing.
+- Use [FastUtil](https://fastutil.di.unimi.it/) or an equivalent library for efficient primitive lists and maps. This avoids the runtime overhead of Java's wrapper classes and autoboxing.
 - For better or more efficient RNG in [special cases](https://stackoverflow.com/questions/453479/how-good-is-java-util-random), use a different random number algorithm than `Math.random()`.
 - This algorithm does not deal with subpatterns referencing other subpatterns since it parses them (mostly) in-order and requires the subpatterns it uses to already be parsed. One layer of reference should be fine, but any more than that may be unreliable. Circular references are, of course, not handled too well either.
 
