@@ -5,6 +5,43 @@ If you use this in your projects, please give me credit by linking this page!*
 
 A word generator that generates random words from a given pattern. It can be used to generate phonetic words for conlangs, convoluted passwords, or original nicknames. This design is heavily based on [Awkwords](http://akana.conlang.org/tools/awkwords/) by Petr Mejzlik, but has some notable differences and is optimized for performance.
 
+### Sample Program
+
+```java
+public static void main(String[] args) {
+    WordGenerator wordGenerator = WordGenerator.builder("CV(CV)(N)")
+        .setPattern('V', "a/i/u")
+        .setPattern('C', "p/t/k/s/m/n")
+        .setPattern('N', "m/n")
+        .build();
+        
+    System.out.println();
+    for (int i = 0; i < 10; ++i) {
+        System.out.println(wordGenerator.generate());
+    }
+}
+```
+
+### Sample Output
+
+```txt
+C = p/t/k/s/m/n -> ["p"/"t"/"k"/"s"/"m"/"n"]
+V = a/i/u -> ["a"/"i"/"u"]
+N = m/n -> ["m"/"n"]
+MAIN = CV(CV)(N) -> ["p"/"t"/"k"/"s"/"m"/"n"] + ["a"/"i"/"u"] + [["p"/"t"/"k"/"s"/"m"/"n"] + ["a"/"i"/"u"]/""] + [["m"/"n"]/""]
+
+kaka
+pamu
+kun
+na
+natan
+sa
+mun
+kum
+sini
+mum
+```
+
 ## Concepts
 
 *For a more in-depth guide of the original concepts and syntax, see [here](http://akana.conlang.org/tools/awkwords/help.html).*
