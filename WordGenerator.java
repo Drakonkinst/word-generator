@@ -253,7 +253,7 @@ public class WordGenerator {
 
             // Compile main pattern
             final PatternToken mainPatternToken = parseFragments(mainPattern, false);
-            System.out.println("MAIN = " + mainPatternToken);
+            System.out.println("MAIN = " + mainPattern + " -> " + mainPatternToken);
             return new WordGenerator(mainPatternToken);
         }
     }
