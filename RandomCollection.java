@@ -78,17 +78,6 @@ public class RandomCollection<E> {
     }
 
     /**
-     * Clears all elements that were added after a given total weight is reached.
-     *
-     * @param to The maximum weight of the RandomCollection.
-     */
-    /*
-    public void truncate(float to) {
-        map = new TreeMap<>(map.headMap(to, true));
-    }
-    */
-
-    /**
      * Returns whether this RandomCollection contains a given item.
      *
      * @param item The item to check.
