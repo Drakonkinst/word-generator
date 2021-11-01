@@ -1,318 +1,255 @@
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * A simple word generator that can generate random words based on editable patterns.
+ * A word generator that can generate random words based on editable patterns.
  * Based on Awkwords 1.2 by Petr Mejzlik (http://akana.conlang.org/tools/awkwords/)
  */
 public class WordGenerator {
+    public static final int DEFAULT_WEIGHT = 1;
 
-    /* Private Variables */
-    private static Random rand = new Random();
+    private static final int CHAR_A = 65;
+    private static final int CHAR_Z = 90;
+    private static final int MIN_WEIGHT = 1;
+    private static final int MAX_WEIGHT = 128;
+    private static final Pattern CONTAINS_SHORTCUT_CHARS = Pattern.compile("[A-Z](?=[^\"]*(?:\"[^\"]*\"[^\"]*)*$)");
 
-    private String mainPattern;     // the main blueprint
-    private String[] patterns;      // subpatterns that hold shortcuts to smaller patterns
+    private final PatternToken token;
 
-    /* Constructors */
-    // WordGenerator with 6 subpatterns
-    public WordGenerator(String mainPattern, String patternC, String patternV, String patternN, String patternA, String patternB, String patternD) {
-        this.mainPattern = mainPattern;
-        this.patterns = new String[26];
-
-        // insert patterns by letter
-        patterns[2] = patternC;
-        patterns[21] = patternV;
-        patterns[13] = patternN;
-
-        patterns[0] = patternA;
-        patterns[1] = patternB;
-        patterns[3] = patternD;
+    public static Builder builder(final String mainPattern) {
+        return new Builder(mainPattern);
     }
 
-    // WordGenerator with Consonant, Verb, and Noun subpatterns
-    public WordGenerator(String mainPattern, String patternC, String patternV, String patternN) {
-        this(mainPattern, patternC, patternV, patternN, null, null, null);
+    private WordGenerator(final PatternToken token) {
+        this.token = token;
     }
 
-    // basic WordGenerator with no subpatterns
-    public WordGenerator(String mainPattern) {
-        this(mainPattern, null, null, null);
+    public String generate() {
+        return token.evaluate();
     }
 
-    /* User Methods */
-
-    // assigns a pattern to a specific shortcut (from 'A' to 'Z')
-    // returns whether it was successful or not
-    public boolean set(char shortcut, String pattern) {
-        if(isShortcut(shortcut)) {
-            patterns[shortcut - 65] = pattern;
-            return true;
+    public static class Builder {
+        private static boolean isShortcut(char c) {
+            return c >= CHAR_A && c <= CHAR_Z;
         }
 
-        return false;
-    }
-
-    // generates a specified number of words from the generator
-    public String[] generate(int amount) {
-        String[] result = new String[amount];
-        for(int i = 0; i < amount; i++) {
-            result[i] = render(mainPattern);
+        private static int extractWeight(final String weightStr) {
+            if(weightStr.length() > 0) {
+                final int weight = Integer.parseInt(weightStr);
+                if(weight < MIN_WEIGHT) {
+                    return MIN_WEIGHT;
+                } else if(weight > MAX_WEIGHT) {
+                    return MAX_WEIGHT;
+                }
+                return weight;
+            }
+            return DEFAULT_WEIGHT;
         }
 
-        return result;
-    }
+        private final String mainPattern;
+        private final Map<Character, String> primitive = new HashMap<>();
+        private final Map<Character, String> complex = new HashMap<>();
+        private final Map<Character, PatternToken> subpatterns = new HashMap<>();
 
-    public String generateOne() {
-        return render(mainPattern);
-    }
-
-    /* Calculations */
-
-    // generates a single word from the pattern
-    private String render(String pattern) {
-        String[][] fragments = fragments(choose(pattern));
-        StringBuilder finalStr = new StringBuilder();
-
-        for(int i = 0; exists(fragments, i ,0); i++) {
-            String fragStr = "";
-
-            if(fragments[i][0].isEmpty()) {
-                continue;
-            }
-
-            switch(fragments[i][0].charAt(0)) {
-                case '(':
-                    // same as '[' but 50% chance to skip entirely
-                    if(rand.nextBoolean()) {
-                        int fragLength = fragments[i][0].length();
-                        fragStr = render(fragments[i][0].substring(1, fragLength - 1));
-                    }
-                    break;
-                case '[':
-                    // recursively renders parts of the word
-                    int fragLength = fragments[i][0].length();
-                    fragStr = render(fragments[i][0].substring(1, fragLength - 1));
-                    break;
-                default:
-                    fragStr = fragments[i][0];
-            }
-
-            for(int filterIndex = 0; exists(fragments, i, 1 + filterIndex); filterIndex++) {
-                if(fragStr.equals(fragments[i][1 + filterIndex])) {
-                    // abort rendering
-                    return "RENDERING_ERROR";
-                }
-            }
-
-            finalStr.append(fragStr);
+        public Builder(final String mainPattern) {
+            this.mainPattern = mainPattern;
         }
 
-        // uncover dummy brackets
-        return finalStr.toString().replaceAll("12", "[(");
-    }
-
-    // parses a list of slash-delimited options
-    private String choose(String str) {
-        int strLength = str.length();
-        List<String> options = new ArrayList<String>();
-        List<String> target = new ArrayList<String>();
-
-        for(int i = 0; i < strLength; i++) {
-            StringBuilder optionStr = new StringBuilder();
-            StringBuilder weightStr = new StringBuilder();
-
-            for(int level = 0; !(i == strLength || (level == 0 && str.charAt(i) == '/')); i++) {
-                // process option's characters
-                if(str.charAt(i) == '"') {
-                    // escaped characters
-                    optionStr.append(str.charAt(i));
-                    i++;
-                    while(i < strLength) {
-                        optionStr.append(str.charAt(i));
-                        if(str.charAt(i) == '"') {
-                            break;
-                        }
-                        i++;
-                    }
-                } else if(str.charAt(i) == '*' && level == 0) {
-                    // weight specification
-                    i++;
-                    while(Character.isDigit(str.charAt(i)) && i < strLength) {
-                        weightStr.append(str.charAt(i));
-                        i++;
-                    }
-                    i--;
-                } else {
-                    char current = str.charAt(i);
-                    optionStr.append(current);
-                    if(current == '[' || current == '(') {
-                        level++;
-                    } else if(current == ']' || current == ')') {
-                        level--;
-                    }
-                }
+        public Builder setPattern(final char shortcut, final String pattern) {
+            if(!isShortcut(shortcut)) {
+                throw new IllegalArgumentException("Shortcut letters must be between A and Z");
             }
-            options.add(optionStr.toString());
-
-            // check weight range - capped at 128
-            if(weightStr.length() == 0) {
-                weightStr = new StringBuilder("1");
-            }
-            int weight = Integer.parseInt(weightStr.toString());
-            if(weight < 1) {
-                weight = 1;
-            }
-            if(weight > 128) {
-                weight = 128;
-            }
-
-            // insert number of references into list according to weight
-            String option = options.get(options.size() - 1);
-            for(int j = 0; j < weight; j++) {
-                target.add(option);
-            }
-        }
-
-        return target.get(rand.nextInt(target.size()));
-    }
-
-    // divides a pattern into top-level fragments, returning the substrings as an array.
-    private String[][] fragments(String pattern) {
-        char current;
-        int fragIndex = 0;
-        int filterIndex = 0;
-        int patternLength = pattern.length();
-        String[][] fragments = new String[patternLength][2];
-
-        for(int i = 0; i < patternLength; i++) {
-            current = pattern.charAt(i);
-            if(isShortcut(current)) {
-                // shortcut letter
-                int lastIndex = lastIndex();
-                fragments[fragIndex][0] = "";
-
-                for(int j = 0; j < lastIndex; j++) {
-                    if(current - 65 == j) {
-                        fragments[fragIndex][0] = "[" + patterns[j] + "]";
-                    }
-                }
-
-                fragIndex++;
-                filterIndex = 0;
-            } else if(current == '^') {
-                // recursively filters an open fragment
-                i++;
-                int length = 0;
-                char next = pattern.charAt(i);
-                boolean esc = false;            // note: quote escaping works inside filters
-
-                while(esc || (notSpecial(next) && (i + length < patternLength))) {
-                    if(next == '"') {
-                        esc = !esc;
-                    }
-                    length++;
-                    next = pattern.charAt(i + length);
-                }
-
-                if(length > 0) {
-                    String filter = fragments(pattern.substring(i, length))[0][0];
-                    fragments[fragIndex - 1][1 + filterIndex] = filter;
-                    filterIndex++;
-                    i += length;
-                    if(pattern.charAt(i) == '^') {
-                        i--;
-                    }
-                }
+            final Matcher matcher = CONTAINS_SHORTCUT_CHARS.matcher(pattern);
+            final boolean matches = matcher.find();
+            if(matches) {
+                // Complex
+                complex.put(shortcut, pattern);
             } else {
-                fragments[fragIndex][0] = "";
+                // Primitive
+                primitive.put(shortcut, pattern);
+            }
+            return this;
+        }
 
-                if(current == '[' || current == '(') {
-                    // brackets
+        // Parse top-level lists
+        public PatternToken parseFragments(final String pattern, final boolean optional) {
+            final List<String> fragments = new ArrayList<>();
+            final List<Integer> weights = new ArrayList<>();
+            final int patternLength = pattern.length();
+            StringBuilder fragStr = new StringBuilder();
+            boolean isWeighted = false;
+
+            for (int i = 0; i < patternLength; ++i) {
+                char currentChar = pattern.charAt(i);
+                if (currentChar == '/') {
+                    if (!fragStr.isEmpty()) {
+                        fragments.add(fragStr.toString());
+                        weights.add(DEFAULT_WEIGHT);
+                    }
+                    fragStr = new StringBuilder();
+                } else if (currentChar == '[' || currentChar == '(') {
                     int level = -1;
                     do {
-                        char next = pattern.charAt(i);
-                        if(next == '[' || next == '(') {
-                            level++;
-                        } else if(next == ']' || next == ')') {
-                            level--;
+                        currentChar = pattern.charAt(i);
+                        if (currentChar == '[' || currentChar == '(') {
+                            ++level;
+                        } else if (currentChar == ']' || currentChar == ')') {
+                            --level;
                         }
+                        fragStr.append(currentChar);
+                        ++i;
+                    } while (level >= 0 && i < patternLength);
+                    --i;
+                } else if (currentChar == '"') {
+                    fragStr.append('"');
+                    do {
+                        ++i;
+                        currentChar = pattern.charAt(i);
+                        fragStr.append(currentChar);
+                    } while (currentChar != '"' && i + 1 < patternLength);
+                } else if (currentChar == '*') {
+                    isWeighted = true;
+                    final String frag = fragStr.toString();
 
-                        fragments[fragIndex][0] += next;
-                        i++;
-
-                    } while(level >= 0 && i < patternLength);
-                    i--;
-                    fragIndex++;
-                    filterIndex = 0;
+                    final StringBuilder weightStr = new StringBuilder();
+                    ++i;
+                    while (i < patternLength) {
+                        currentChar = pattern.charAt(i);
+                        if (Character.isDigit(currentChar)) {
+                            weightStr.append(currentChar);
+                        } else {
+                            --i;
+                            break;
+                        }
+                        ++i;
+                    }
+                    int weight = extractWeight(weightStr.toString());
+                    fragments.add(frag);
+                    weights.add(weight);
+                    fragStr = new StringBuilder();
                 } else {
-                    // read characters
-                    char next;
-                    while(i < patternLength && notSpecial(pattern.charAt(i))) {
-                        next = pattern.charAt(i);
-                        if(next == '"') {
-                            // escaping time!
-                            i++;
-                            if(pattern.charAt(i) == '"') {
-                                // insert a single " in the fragment
-                                fragments[fragIndex][0] += '"';
-                            }
-                            while(pattern.charAt(i) != '"' && i < patternLength) {
-                                // read escaped characters
-                                char escNext = pattern.charAt(i);
-                                char addFrag = escNext;
-
-                                // dummy characters for fragment-initial brackets to get around their detection in render()
-                                if(escNext == '[') {
-                                    addFrag = '1';
-                                } else if(escNext == '(') {
-                                    addFrag = '2';
-                                }
-
-                                fragments[fragIndex][0] += addFrag;
-                                i++;
-                            }
-                        } else if(next != ' ') {
-                            // note: spaces do not interrupt the fragment
-                            fragments[fragIndex][0] += next;
-                        }
-
-                        i++;
-                    }
-                    i--;
-                    if(fragments[fragIndex] != null) {
-                        fragIndex++;
-                        filterIndex = 0;
-                    }
+                    fragStr.append(currentChar);
                 }
             }
-        }
-        return fragments;
-    }
-
-    /* Helper Methods */
-
-    private boolean isShortcut(char c) {
-        return c >= 'A' && c <= 'Z';
-    }
-
-    private boolean notSpecial(char c) {
-        return c != '[' && c != '(' && c != '^' && !isShortcut(c);
-    }
-
-    // returns if index exists in 2D array and is not null
-    private boolean exists(String[][] array, int row, int col) {
-        return row < array.length && col < array[0].length && array[row][col] != null;
-    }
-
-    // gets last filled index for optimized looping
-    private int lastIndex() {
-        int lastIndex = 0;
-        for(int i = 0; i <= 25; i++) {
-            if(patterns[i] != null) {
-                lastIndex = i + 1;
+            if(!fragStr.isEmpty()) {
+                fragments.add(fragStr.toString());
+                weights.add(DEFAULT_WEIGHT);
             }
+
+            if(fragments.size() > 1) {
+                if(isWeighted) {
+                    final RandomCollection<PatternToken> tokens = new RandomCollection<>();
+                    for(int i = 0; i < fragments.size(); ++i) {
+                        tokens.add(weights.get(i), parseFragment(fragments.get(i)));
+                    }
+                    return new PatternTokenWeighted(optional, tokens);
+                } else {
+                    final List<PatternToken> tokens = new ArrayList<>();
+                    for(int i = 0; i < fragments.size(); ++i) {
+                        tokens.add(parseFragment(fragments.get(i)));
+                    }
+                    return new PatternTokenUniform(optional, tokens);
+                }
+            }
+
+            return parseFragment(pattern);
         }
-        return lastIndex;
+
+        private PatternToken parseFragment(final String pattern) {
+            final int patternLength = pattern.length();
+
+            final List<PatternToken> tokens = new ArrayList<>();
+            for(int i = 0; i < patternLength; ++i) {
+                char currentChar = pattern.charAt(i);
+
+                if(currentChar == '"') {
+                    final StringBuilder escapedStr = new StringBuilder();
+                    ++i;
+                    while(i < patternLength) {
+                        currentChar = pattern.charAt(i);
+                        ++i;
+                        if(currentChar != '"') {
+                            escapedStr.append(currentChar);
+                        } else {
+                            break;
+                        }
+                    }
+                    --i;
+                    tokens.add(PatternTokenLiteral.of(escapedStr.toString()));
+                } else if(currentChar == '[' || currentChar == '(') {
+                    int level = 0;
+                    final boolean optional = currentChar == '(';
+                    final StringBuilder listStr = new StringBuilder();
+                    ++i;
+
+                    while(i < patternLength) {
+                        currentChar = pattern.charAt(i);
+                        if (currentChar == '[' || currentChar == '(') {
+                            ++level;
+                        } else if (currentChar == ']' || currentChar == ')') {
+                            --level;
+                            if(level < 0) {
+                                break;
+                            }
+                        }
+                        listStr.append(currentChar);
+                        ++i;
+                    }
+
+                    tokens.add(parseFragments(listStr.toString(), optional));
+                } else if(isShortcut(currentChar)) {
+                    final PatternToken subpatternToken = subpatterns.get(currentChar);
+                    if(subpatternToken == null) {
+                        // This is a bit unreliable
+                        throw new IllegalArgumentException("Error: Subpattern " + currentChar + " has not been loaded"
+                            + " yet. Complex subpatterns cannot reference other complex subpatterns.");
+                    }
+                    tokens.add(subpatternToken);
+                } else {
+                    final StringBuilder literalStr = new StringBuilder();
+                    while(i < patternLength) {
+                        currentChar = pattern.charAt(i);
+                        if(currentChar == '[' || currentChar == '(' || currentChar == '"' || isShortcut(currentChar)) {
+                            break;
+                        }
+                        ++i;
+                        literalStr.append(currentChar);
+                    }
+                    --i;
+                    tokens.add(PatternTokenLiteral.of(literalStr.toString()));
+                }
+            }
+
+            if(tokens.size() <= 0) {
+                return PatternTokenLiteral.EMPTY;
+            }
+            if(tokens.size() == 1) {
+                return tokens.get(0);
+            }
+            return new PatternTokenTuple(tokens);
+        }
+
+        public WordGenerator build() {
+            // Compile all primitive tokens
+            for(Map.Entry<Character, String> entry : primitive.entrySet()) {
+                subpatterns.put(entry.getKey(), parseFragments(entry.getValue(), false));
+                System.out.println(entry.getKey() + " = " + entry.getValue() + " -> " + subpatterns.get(entry.getKey()));
+            }
+
+            // Compile all complex tokens
+            for(Map.Entry<Character, String> entry : complex.entrySet()) {
+                subpatterns.put(entry.getKey(), parseFragments(entry.getValue(), false));
+                System.out.println(entry.getKey() + " = " + entry.getValue() + " -> " + subpatterns.get(entry.getKey()));
+            }
+
+            // Compile main pattern
+            final PatternToken mainPatternToken = parseFragments(mainPattern, false);
+            System.out.println("MAIN = " + mainPatternToken);
+            return new WordGenerator(mainPatternToken);
+        }
     }
 }
