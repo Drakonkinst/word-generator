@@ -155,7 +155,12 @@ public class WordGenerator {
                     return new PatternTokenUniform(optional, tokens);
                 }
             }
-
+            
+            if(optional) {
+                final List<PatternToken> singletonToken = new ArrayList<>();
+                singletonToken.add(parseFragment(fragments.get(0)));
+                return new PatternTokenUniform(true, singletonToken);
+            }
             return parseFragment(pattern);
         }
 
